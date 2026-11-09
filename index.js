@@ -7,6 +7,8 @@ const rateLimit = require("express-rate-limit");
 const helmet = require("helmet");
 const compression = require("compression");
 const cors = require("cors");
+const httpModule = require("http");
+const httpsModule = require("https");
 const app = express();
 const http = require("http").createServer(app);
 const io = require("socket.io")(http, {
@@ -19,9 +21,12 @@ const io = require("socket.io")(http, {
 // Configuration
 const CONFIG = {
   port: process.env.PORT || 3000,
-  apiUrl: "https://openrouter.ai/api/v1/chat/completions",
-  maxRetries: 3,
-  timeout: 30000,
+  // Local Ollama server (OpenAI-compatible endpoint: /v1/chat/completions)
+  ollamaBaseUrl: (process.env.OLLAMA_BASE_URL || "http://localhost:11434").replace(/\/+$/, ""),
+  defaultModel: process.env.OLLAMA_MODEL || "qwen2.5:1.5b",
+  maxTokens: parseInt(process.env.OLLAMA_MAX_TOKENS, 10) || 300, // keep replies short for CPU-only inference
+  maxRetries: parseInt(process.env.MAX_RETRIES, 10) || 3,
+  timeout: parseInt(process.env.OLLAMA_TIMEOUT, 10) || 180000, // local inference can be slow
   maxMessageLength: 1000,
   rateLimitWindow: 15 * 60 * 1000, // 15 minutes
   rateLimitMax: 100 // requests per window
@@ -140,15 +145,9 @@ app.get('/health', (req, res) => {
 });
 
 // API endpoints
-app.get('/api/models', (req, res) => {
-  const availableModels = [
-    { id: 'openai/gpt-3.5-turbo', name: 'GPT-3.5 Turbo', provider: 'OpenAI' },
-    { id: 'openai/gpt-4', name: 'GPT-4', provider: 'OpenAI' },
-    { id: 'anthropic/claude-3-haiku', name: 'Claude 3 Haiku', provider: 'Anthropic' },
-    { id: 'anthropic/claude-3-sonnet', name: 'Claude 3 Sonnet', provider: 'Anthropic' },
-    { id: 'google/gemini-pro', name: 'Gemini Pro', provider: 'Google' }
-  ];
-  res.json(availableModels);
+app.get('/api/models', async (req, res) => {
+  const models = await getOllamaModels(true);
+  res.json(models.map(name => ({ id: name, name: name, provider: 'Ollama' })));
 });
 
 app.get('/api/personalities', (req, res) => {
@@ -213,7 +212,7 @@ io.on("connection", (socket) => {
       if (typeof data === 'string') {
         // Old format - just text
         text = data;
-        model = 'openai/gpt-3.5-turbo';
+        model = CONFIG.defaultModel;
         personality = 'conversation_partner';
         learningMode = 'conversation';
         difficultyLevel = 'intermediate';
@@ -221,7 +220,7 @@ io.on("connection", (socket) => {
       } else if (typeof data === 'object' && data !== null) {
         // New format - object with learning parameters
         text = data.text;
-        model = data.model || 'openai/gpt-3.5-turbo';
+        model = data.model || CONFIG.defaultModel;
         personality = data.personality || 'conversation_partner';
         learningMode = data.learningMode || 'conversation';
         difficultyLevel = data.difficultyLevel || 'intermediate';
@@ -243,6 +242,9 @@ io.on("connection", (socket) => {
       // Analyze speech for learning feedback
       const speechAnalysis = await analyzeSpeechForLearning(text, difficultyLevel, learningMode);
 
+      // Only allow models installed in local Ollama; otherwise use the default model
+      model = await resolveOllamaModel(model);
+
       // Get enhanced personality prompt with learning context
       const systemPrompt = getEnhancedTutorPrompt(personality, difficultyLevel, feedbackStyle, speechAnalysis);
 
@@ -253,13 +255,15 @@ io.on("connection", (socket) => {
           { role: "system", content: systemPrompt },
           { role: "user", content: `Student said: "${text}"\n\nSpeech Analysis: ${JSON.stringify(speechAnalysis)}\n\nPlease provide appropriate feedback and continue the conversation.` }
         ],
-        max_tokens: 600,
+        max_tokens: CONFIG.maxTokens,
         temperature: 0.7,
-        stream: false
+        stream: true
       };
 
-      // Make API call with retry logic
-      const response = await makeAPICallWithRetry(apiRequest, CONFIG.maxRetries);
+      // Make API call with retry logic; forward each generated piece to the client as it arrives
+      const response = await makeAPICallWithRetry(apiRequest, CONFIG.maxRetries, (delta) => {
+        socket.emit("tutor response chunk", { delta });
+      });
       
       if (!response || !response.data || !response.data.choices || !response.data.choices[0]) {
         throw new Error('Invalid API response format');
@@ -342,49 +346,198 @@ io.on("connection", (socket) => {
   });
 });
 
-// API call with retry logic
-async function makeAPICallWithRetry(requestData, maxRetries = 3) {
-  let lastError;
-  
-  // Check if API key is available
-  if (!process.env.OPENAI_API_KEY) {
-    console.warn('⚠️ No OpenAI API key found, using fallback response');
-    return createFallbackResponse(requestData);
+// Dedicated agents without keep-alive: Ollama may close idle pooled sockets,
+// which made the next request fail with "socket hang up" (connection setup to localhost is cheap)
+const ollamaAgents = {
+  httpAgent: new httpModule.Agent({ keepAlive: false }),
+  httpsAgent: new httpsModule.Agent({ keepAlive: false })
+};
+
+// Cached list of locally installed Ollama models
+let ollamaModelCache = { models: [], fetchedAt: 0 };
+const OLLAMA_MODEL_CACHE_TTL = 60 * 1000;
+
+// Fetch installed model names from Ollama (GET /api/tags)
+async function getOllamaModels(forceRefresh = false) {
+  const now = Date.now();
+  if (!forceRefresh && ollamaModelCache.fetchedAt && now - ollamaModelCache.fetchedAt < OLLAMA_MODEL_CACHE_TTL) {
+    return ollamaModelCache.models;
   }
-  
+  try {
+    const response = await axios.get(`${CONFIG.ollamaBaseUrl}/api/tags`, { timeout: 5000, ...ollamaAgents });
+    const models = (response.data?.models || []).map(m => m.name);
+    ollamaModelCache = { models, fetchedAt: now };
+    return models;
+  } catch (error) {
+    console.error(`❌ Failed to fetch Ollama models from ${CONFIG.ollamaBaseUrl}:`, error.message);
+    return ollamaModelCache.models;
+  }
+}
+
+// Map the requested model to an installed Ollama model, falling back to the default
+async function resolveOllamaModel(requestedModel) {
+  const models = await getOllamaModels();
+  if (requestedModel && models.includes(requestedModel)) {
+    return requestedModel;
+  }
+  if (requestedModel && requestedModel !== CONFIG.defaultModel) {
+    console.warn(`⚠️ Model "${requestedModel}" not found in Ollama, using default "${CONFIG.defaultModel}"`);
+  }
+  return CONFIG.defaultModel;
+}
+
+// Read a whole response stream into a string (used for error bodies)
+function readStreamToString(stream) {
+  return new Promise((resolve) => {
+    let body = '';
+    stream.on('data', (chunk) => { body += chunk.toString(); });
+    stream.on('end', () => resolve(body));
+    stream.on('error', () => resolve(body));
+  });
+}
+
+/**
+ * Stream a chat completion from Ollama's OpenAI-compatible endpoint (Server-Sent Events).
+ * Each SSE line looks like: `data: {"choices":[{"delta":{"content":"..."}}]}` and ends with `data: [DONE]`.
+ * The idle timer aborts the request if no data arrives for CONFIG.timeout ms
+ * (covers both model loading / prompt evaluation and stalls mid-generation).
+ * @param {object} requestData - OpenAI-style chat request with stream: true
+ * @param {(delta: string) => void} onDelta - called for every generated text fragment
+ * @returns {Promise<{status: number, content: string, headers: object, deltaCount: number}>}
+ */
+async function streamChatCompletion(requestData, onDelta) {
+  const apiUrl = `${CONFIG.ollamaBaseUrl}/v1/chat/completions`;
+  const controller = new AbortController();
+  let idleTimer = null;
+  let timedOut = false;
+  const resetIdleTimer = () => {
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => {
+      timedOut = true;
+      controller.abort();
+    }, CONFIG.timeout);
+  };
+
+  resetIdleTimer();
+  try {
+    const response = await axios.post(apiUrl, requestData, {
+      headers: { "Content-Type": "application/json" },
+      responseType: "stream",
+      signal: controller.signal,
+      ...ollamaAgents,
+      validateStatus: (status) => status < 500 // Retry on server errors only
+    });
+
+    if (response.status >= 400) {
+      const body = await readStreamToString(response.data);
+      return { status: response.status, content: body, headers: response.headers, deltaCount: 0 };
+    }
+
+    let content = '';
+    let deltaCount = 0;
+    let buffer = '';
+
+    await new Promise((resolve, reject) => {
+      response.data.on('data', (chunk) => {
+        resetIdleTimer();
+        buffer += chunk.toString();
+        const lines = buffer.split('\n');
+        buffer = lines.pop(); // keep incomplete line for the next chunk
+
+        for (const rawLine of lines) {
+          const line = rawLine.trim();
+          if (!line.startsWith('data:')) continue;
+          const payload = line.slice(5).trim();
+          if (payload === '[DONE]') continue;
+          try {
+            const json = JSON.parse(payload);
+            if (json.error) {
+              reject(new Error(`Ollama stream error: ${json.error.message || json.error}`));
+              return;
+            }
+            const delta = json.choices?.[0]?.delta?.content;
+            if (delta) {
+              content += delta;
+              deltaCount++;
+              onDelta(delta);
+            }
+          } catch (parseError) {
+            console.warn('⚠️ Skipping malformed SSE line:', line.slice(0, 120));
+          }
+        }
+      });
+      response.data.on('end', resolve);
+      response.data.on('error', reject);
+    });
+
+    return { status: response.status, content, headers: response.headers, deltaCount };
+  } catch (error) {
+    if (timedOut) {
+      const timeoutError = new Error(`Ollama request timed out after ${CONFIG.timeout}ms without data`);
+      timeoutError.code = 'ECONNABORTED';
+      throw timeoutError;
+    }
+    throw error;
+  } finally {
+    clearTimeout(idleTimer);
+  }
+}
+
+// API call with retry logic (local Ollama, OpenAI-compatible chat completions, streamed)
+async function makeAPICallWithRetry(requestData, maxRetries = 3, onDelta = () => {}) {
+  let lastError;
+  let streamedAnything = false;
+  const trackDelta = (delta) => {
+    streamedAnything = true;
+    onDelta(delta);
+  };
+
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      console.log(`🔄 API attempt ${attempt}/${maxRetries}`);
-      
-      const response = await axios.post(CONFIG.apiUrl, requestData, {
-        headers: {
-          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-          "HTTP-Referer": `http://localhost:${CONFIG.port}`,
-          "Content-Type": "application/json",
-          "X-Title": "VoiceGPT Advanced"
-        },
-        timeout: CONFIG.timeout,
-        validateStatus: (status) => status < 500 // Retry on server errors only
-      });
+      console.log(`🔄 Ollama API attempt ${attempt}/${maxRetries} (model: ${requestData.model})`);
 
-      if (response.status === 429) {
+      const result = await streamChatCompletion(requestData, trackDelta);
+
+      if (result.status === 429) {
         // Rate limited - wait before retry
-        const retryAfter = parseInt(response.headers['retry-after']) || Math.pow(2, attempt);
+        const retryAfter = parseInt(result.headers['retry-after']) || Math.pow(2, attempt);
         console.log(`⏳ Rate limited, waiting ${retryAfter}s before retry...`);
         await sleep(retryAfter * 1000);
         continue;
       }
 
-      if (response.status >= 400) {
-        throw new Error(`API error: ${response.status} - ${response.statusText}`);
+      if (result.status >= 400) {
+        let detail = result.content;
+        try {
+          const json = JSON.parse(result.content);
+          detail = json.error?.message || json.error || detail;
+        } catch (e) { /* keep raw body */ }
+        throw new Error(`Ollama API error: ${result.status} - ${detail}`);
       }
 
-      return response;
+      if (!result.content) {
+        throw new Error('Ollama returned an empty response');
+      }
+
+      // Keep the same shape as a non-streaming OpenAI response for the caller
+      return { data: { choices: [{ message: { content: result.content } }] } };
 
     } catch (error) {
       lastError = error;
       console.error(`❌ API attempt ${attempt} failed:`, error.message);
-      
+
+      // A timeout means the model is too slow; retrying would only multiply the wait
+      if (error.code === 'ECONNABORTED') {
+        console.warn(`⏱️ Ollama request timed out after ${CONFIG.timeout}ms, not retrying`);
+        break;
+      }
+
+      // Text was already shown to the user; a retry would duplicate it
+      if (streamedAnything) {
+        console.warn('⚠️ Stream failed after partial output, not retrying');
+        throw error;
+      }
+
       if (attempt < maxRetries) {
         const delay = Math.min(1000 * Math.pow(2, attempt - 1), 10000); // Exponential backoff, max 10s
         console.log(`⏳ Retrying in ${delay}ms...`);
@@ -392,7 +545,7 @@ async function makeAPICallWithRetry(requestData, maxRetries = 3) {
       }
     }
   }
-  
+
   // If all API attempts failed, use fallback
   console.warn('⚠️ All API attempts failed, using fallback response');
   return createFallbackResponse(requestData);
@@ -767,7 +920,17 @@ http.listen(CONFIG.port, () => {
   console.log('🎓 English Tutor AI Server Started');
   console.log(`📍 Server running at http://localhost:${CONFIG.port}`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🔑 API Key configured: ${process.env.OPENAI_API_KEY ? '✅' : '❌'}`);
+  console.log(`🦙 Ollama endpoint: ${CONFIG.ollamaBaseUrl} (default model: ${CONFIG.defaultModel})`);
+  getOllamaModels(true).then(models => {
+    if (models.length === 0) {
+      console.warn('⚠️ No Ollama models found. Is Ollama running? Fallback responses will be used.');
+    } else {
+      console.log(`📦 Ollama models: ${models.join(', ')}`);
+      if (!models.includes(CONFIG.defaultModel)) {
+        console.warn(`⚠️ Default model "${CONFIG.defaultModel}" is not installed. Run: ollama pull ${CONFIG.defaultModel}`);
+      }
+    }
+  });
   console.log(`⚡ Features: Speech Analysis, Grammar Checking, Progress Tracking`);
   console.log(`📊 Rate Limit: ${CONFIG.rateLimitMax} requests per ${CONFIG.rateLimitWindow/1000/60} minutes`);
   console.log('🎯 Ready for English learning sessions!');

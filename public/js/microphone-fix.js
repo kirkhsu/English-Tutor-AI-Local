@@ -62,48 +62,49 @@ function displayEnhancedFeedback(learningFeedback) {
     suggestions = []
   } = learningFeedback;
   
+  const tr = typeof window.t === 'function' ? window.t : (k => k);
   const feedbackHtml = `
     <div class="feedback-section">
-      <h4>📚 Learning Feedback</h4>
+      <h4 data-i18n="fbSectionTitle">${tr('fbSectionTitle')}</h4>
       
       ${grammarFeedback ? `
         <div class="feedback-item grammar">
-          <h5><i class="fas fa-grammar"></i> Grammar</h5>
+          <h5><i class="fas fa-grammar"></i> <span data-i18n="fbHeaderGrammar">${tr('fbHeaderGrammar')}</span></h5>
           <p>${grammarFeedback}</p>
         </div>
       ` : ''}
       
       ${pronunciationFeedback ? `
         <div class="feedback-item pronunciation">
-          <h5><i class="fas fa-microphone"></i> Pronunciation</h5>
+          <h5><i class="fas fa-microphone"></i> <span data-i18n="fbHeaderPronunciation">${tr('fbHeaderPronunciation')}</span></h5>
           <p>${pronunciationFeedback}</p>
         </div>
       ` : ''}
       
       ${vocabularyFeedback ? `
         <div class="feedback-item vocabulary">
-          <h5><i class="fas fa-book"></i> Vocabulary</h5>
+          <h5><i class="fas fa-book"></i> <span data-i18n="fbHeaderVocabulary">${tr('fbHeaderVocabulary')}</span></h5>
           <p>${vocabularyFeedback}</p>
         </div>
       ` : ''}
       
       ${fluencyFeedback ? `
         <div class="feedback-item fluency">
-          <h5><i class="fas fa-comments"></i> Fluency</h5>
+          <h5><i class="fas fa-comments"></i> <span data-i18n="fbHeaderFluency">${tr('fbHeaderFluency')}</span></h5>
           <p>${fluencyFeedback}</p>
         </div>
       ` : ''}
       
       ${overallFeedback ? `
         <div class="feedback-item overall">
-          <h5><i class="fas fa-star"></i> Overall</h5>
+          <h5><i class="fas fa-star"></i> <span data-i18n="fbHeaderOverall">${tr('fbHeaderOverall')}</span></h5>
           <p>${overallFeedback}</p>
         </div>
       ` : ''}
       
       ${suggestions.length > 0 ? `
         <div class="feedback-item suggestions">
-          <h5><i class="fas fa-lightbulb"></i> Suggestions</h5>
+          <h5><i class="fas fa-lightbulb"></i> <span data-i18n="fbHeaderSuggestions">${tr('fbHeaderSuggestions')}</span></h5>
           <ul>
             ${suggestions.map(suggestion => `<li>${suggestion}</li>`).join('')}
           </ul>
@@ -162,7 +163,11 @@ function generateSessionReport() {
   console.log('📋 Session Report:', report);
   
   // Show session summary toast
-  showToast(`Session: ${messagesCount} messages, ${wordsSpoken} words, ${vocabularyUsed} unique words`, 'info');
+  const tr = typeof window.t === 'function' ? window.t : null;
+  const msg = tr
+    ? tr('toastSessionReport', { messages: messagesCount, words: wordsSpoken, unique: vocabularyUsed })
+    : `Session: ${messagesCount} messages, ${wordsSpoken} words, ${vocabularyUsed} unique words`;
+  showToast(msg, 'info');
   
   return report;
 }
@@ -248,81 +253,82 @@ async function runMicrophoneDiagnostic() {
 
 // Show microphone diagnostic results
 function showMicrophoneDiagnosticResults(diagnostics) {
+  const tr = typeof window.t === 'function' ? window.t : (k => k);
   const issues = [];
   const fixes = [];
   
   if (!diagnostics.browserSupport) {
-    issues.push('Browser not supported');
-    fixes.push('Use Chrome, Edge, or Safari');
+    issues.push(tr('compatIssueHeader'));
+    fixes.push(tr('compatIssueFooter'));
   }
   
   if (!diagnostics.mediaDevicesAPI) {
-    issues.push('MediaDevices API not available');
-    fixes.push('Update your browser to the latest version');
+    issues.push(tr('compatMediaDevices'));
+    fixes.push(tr('errMicUnknownSug2'));
   }
   
   if (!diagnostics.speechRecognition) {
-    issues.push('Speech Recognition not supported');
-    fixes.push('Use Chrome, Edge, or Safari for speech recognition');
+    issues.push(tr('compatSpeechRecog'));
+    fixes.push(tr('compatIssueFooter'));
   }
   
   if (!diagnostics.microphoneAccess) {
-    issues.push('Microphone access denied or unavailable');
-    fixes.push('Allow microphone permissions in browser settings');
+    issues.push(tr('errMicDenied'));
+    fixes.push(tr('errMicUnknownSug1'));
   }
   
   if (diagnostics.permissions === 'NotAllowedError') {
-    fixes.push('Click the microphone icon in address bar and allow access');
-    fixes.push('Go to browser settings and enable microphone permissions');
+    fixes.push(tr('errMicDeniedSug1'));
+    fixes.push(tr('errMicDeniedSug2'));
   }
   
   if (diagnostics.permissions === 'NotFoundError') {
-    fixes.push('Connect a microphone to your device');
-    fixes.push('Check that your microphone is working in other applications');
+    fixes.push(tr('errMicNotFoundSug1'));
+    fixes.push(tr('errMicNotFoundSug2'));
   }
   
   if (diagnostics.permissions === 'NotReadableError') {
-    fixes.push('Close other applications using the microphone');
-    fixes.push('Restart your browser');
+    fixes.push(tr('errMicNotReadableSug1'));
+    fixes.push(tr('errMicNotReadableSug2'));
   }
   
   const resultHtml = `
     <div class="microphone-diagnostic">
-      <h3>🔧 Microphone Diagnostic Results</h3>
+      <h3>${tr('diagTitle')}</h3>
       
       <div class="diagnostic-status">
         <div class="status-item ${diagnostics.browserSupport ? 'success' : 'error'}">
-          <span class="status-dot">●</span> Browser Support: ${diagnostics.browserSupport ? 'OK' : 'Failed'}
+          <span class="status-dot">●</span> ${tr('diagBrowserSupport')}: ${diagnostics.browserSupport ? tr('diagOk') : tr('diagFailed')}
         </div>
         <div class="status-item ${diagnostics.mediaDevicesAPI ? 'success' : 'error'}">
-          <span class="status-dot">●</span> Media Devices API: ${diagnostics.mediaDevicesAPI ? 'OK' : 'Failed'}
+          <span class="status-dot">●</span> ${tr('diagMediaDevices')}: ${diagnostics.mediaDevicesAPI ? tr('diagOk') : tr('diagFailed')}
         </div>
         <div class="status-item ${diagnostics.speechRecognition ? 'success' : 'error'}">
-          <span class="status-dot">●</span> Speech Recognition: ${diagnostics.speechRecognition ? 'OK' : 'Failed'}
+          <span class="status-dot">●</span> ${tr('diagSpeechRecog')}: ${diagnostics.speechRecognition ? tr('diagOk') : tr('diagFailed')}
         </div>
         <div class="status-item ${diagnostics.microphoneAccess ? 'success' : 'error'}">
-          <span class="status-dot">●</span> Microphone Access: ${diagnostics.microphoneAccess ? 'OK' : 'Failed'}
+          <span class="status-dot">●</span> ${tr('diagMicAccess')}: ${diagnostics.microphoneAccess ? tr('diagOk') : tr('diagFailed')}
         </div>
         <div class="status-item ${diagnostics.audioContext ? 'success' : 'error'}">
-          <span class="status-dot">●</span> Audio Context: ${diagnostics.audioContext ? 'OK' : 'Failed'}
+          <span class="status-dot">●</span> ${tr('diagAudioContext')}: ${diagnostics.audioContext ? tr('diagOk') : tr('diagFailed')}
         </div>
         <div class="status-item info">
-          <span class="status-dot">●</span> Permissions: ${diagnostics.permissions}
+          <span class="status-dot">●</span> ${tr('diagPermissions')}: ${diagnostics.permissions}
         </div>
       </div>
       
       ${issues.length > 0 ? `
         <div class="diagnostic-issues">
-          <h4>❌ Issues Found:</h4>
+          <h4>${tr('diagIssuesTitle')}</h4>
           <ul>
             ${issues.map(issue => `<li>${issue}</li>`).join('')}
           </ul>
         </div>
-      ` : '<div class="diagnostic-success"><h4>✅ All checks passed!</h4></div>'}
+      ` : `<div class="diagnostic-success"><h4>${tr('diagAllPassed')}</h4></div>`}
       
       ${fixes.length > 0 ? `
         <div class="diagnostic-fixes">
-          <h4>💡 Recommended Fixes:</h4>
+          <h4>${tr('diagFixesTitle')}</h4>
           <ol>
             ${fixes.map(fix => `<li>${fix}</li>`).join('')}
           </ol>
@@ -331,7 +337,7 @@ function showMicrophoneDiagnosticResults(diagnostics) {
       
       ${diagnostics.errors.length > 0 ? `
         <div class="diagnostic-errors">
-          <h4>⚠️ Error Details:</h4>
+          <h4>${tr('diagErrorsTitle')}</h4>
           <ul>
             ${diagnostics.errors.map(error => `<li>${error}</li>`).join('')}
           </ul>
@@ -339,9 +345,9 @@ function showMicrophoneDiagnosticResults(diagnostics) {
       ` : ''}
       
       <div class="diagnostic-actions">
-        <button onclick="autoFixMicrophoneIssues()" class="fix-btn">🔧 Auto-Fix Issues</button>
-        <button onclick="testMicrophoneAccess()" class="test-btn">🎤 Test Microphone</button>
-        <button onclick="hideToast()" class="close-btn">✖ Close</button>
+        <button onclick="autoFixMicrophoneIssues()" class="fix-btn">${tr('diagAutoFixBtn')}</button>
+        <button onclick="testMicrophoneAccess()" class="test-btn">${tr('diagTestMicBtn')}</button>
+        <button onclick="hideToast()" class="close-btn">${tr('diagCloseBtn')}</button>
       </div>
     </div>
   `;
@@ -362,6 +368,7 @@ function showMicrophoneDiagnosticResults(diagnostics) {
 // Auto-fix microphone issues
 function autoFixMicrophoneIssues() {
   console.log('🔧 Auto-fixing microphone issues...');
+  const tr = typeof window.t === 'function' ? window.t : (k => k);
   
   try {
     // Reinitialize speech recognition
@@ -379,7 +386,7 @@ function autoFixMicrophoneIssues() {
     if (micBtn) {
       micBtn.disabled = false;
       micBtn.style.opacity = '1';
-      micBtn.title = 'Click to start recording';
+      micBtn.title = tr('ariaStartSpeaking');
     }
     
     // Clear any error states
@@ -388,21 +395,22 @@ function autoFixMicrophoneIssues() {
       outputYou: document.querySelector('.output-you')
     };
     
-    if (elements.outputBot && elements.outputBot.textContent.includes('error')) {
-      elements.outputBot.textContent = 'Microphone issues fixed. Click the microphone to start speaking!';
+    if (elements.outputBot && (elements.outputBot.textContent.includes('error') || elements.outputBot.textContent.includes('錯誤'))) {
+      elements.outputBot.textContent = tr('diagFixedBotMsg');
     }
     
-    showToast('🔧 Microphone auto-fix completed. Try speaking now!', 'success');
+    showToast(tr('diagAutoFixDone'), 'success');
     
   } catch (error) {
     console.error('❌ Auto-fix failed:', error);
-    showToast('❌ Auto-fix failed. Please try the manual fixes suggested above.', 'error');
+    showToast(tr('diagAutoFixFailed'), 'error');
   }
 }
 
 // Enhanced microphone test
 async function enhancedMicrophoneTest() {
   console.log('🎤 Running enhanced microphone test...');
+  const tr = typeof window.t === 'function' ? window.t : (k => k);
   
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ 
@@ -442,18 +450,18 @@ async function enhancedMicrophoneTest() {
         
         // Show results
         if (maxLevel > 10) {
-          showToast(`✅ Microphone test passed! Peak level: ${maxLevel}/255`, 'success');
+          showToast(tr('diagTestPassed', { level: maxLevel }), 'success');
         } else {
-          showToast(`⚠️ Microphone test warning: Very low audio levels detected (${maxLevel}/255). Check your microphone volume.`, 'warning');
+          showToast(tr('diagTestLow', { level: maxLevel }), 'warning');
         }
       }
     }, 100);
     
-    showToast('🎤 Testing microphone for 3 seconds... Please speak!', 'info');
+    showToast(tr('diagTesting3s'), 'info');
     
   } catch (error) {
     console.error('❌ Enhanced microphone test failed:', error);
-    showToast(`❌ Microphone test failed: ${error.message}`, 'error');
+    showToast(tr('diagTestFailed', { error: error.message }), 'error');
   }
 }
 
@@ -461,12 +469,13 @@ async function enhancedMicrophoneTest() {
 function addDiagnosticButton() {
   const controlsContainer = document.querySelector('.controls');
   if (!controlsContainer || document.getElementById('diagnostic-btn')) return;
+  const tr = typeof window.t === 'function' ? window.t : (k => k);
   
   const diagnosticBtn = document.createElement('button');
   diagnosticBtn.id = 'diagnostic-btn';
   diagnosticBtn.className = 'control-btn diagnostic-btn';
   diagnosticBtn.innerHTML = '<i class="fas fa-stethoscope"></i>';
-  diagnosticBtn.title = 'Run Microphone Diagnostic';
+  diagnosticBtn.title = tr('diagBtnTitle');
   diagnosticBtn.onclick = runMicrophoneDiagnostic;
   
   controlsContainer.appendChild(diagnosticBtn);

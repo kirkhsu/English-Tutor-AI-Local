@@ -73,19 +73,21 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Enhanced Theme Toggle */
+/* Enhanced Theme & Language Toggle */
 .theme-toggle {
   position: fixed;
   top: 20px;
   right: 20px;
   z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-#theme-btn {
+#theme-btn,
+#lang-btn {
   background: var(--surface-color);
   border: 2px solid var(--border-color);
-  border-radius: 50%;
-  width: 52px;
   height: 52px;
   display: flex;
   align-items: center;
@@ -96,9 +98,24 @@ body {
   backdrop-filter: blur(10px);
   position: relative;
   overflow: hidden;
+  color: var(--text-color);
 }
 
-#theme-btn::before {
+#theme-btn {
+  border-radius: 50%;
+  width: 52px;
+}
+
+#lang-btn {
+  border-radius: 26px;
+  padding: 0 16px;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+#theme-btn::before,
+#lang-btn::before {
   content: '';
   position: absolute;
   top: 0;
@@ -111,17 +128,20 @@ body {
   z-index: -1;
 }
 
-#theme-btn:hover {
+#theme-btn:hover,
+#lang-btn:hover {
   transform: translateY(-2px) scale(1.05);
   box-shadow: var(--shadow-large);
   border-color: var(--primary-color);
 }
 
-#theme-btn:hover::before {
+#theme-btn:hover::before,
+#lang-btn:hover::before {
   opacity: 0.1;
 }
 
-#theme-btn i {
+#theme-btn i,
+#lang-btn i {
   font-size: 1.2rem;
   color: var(--text-color);
   transition: var(--transition);
@@ -1808,4 +1828,17 @@ select:focus {
 [data-theme="dark"] .control-buttons {
   background: rgba(255, 255, 255, 0.02);
   border-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Blinking cursor while the tutor reply is being streamed */
+.output-bot.streaming::after {
+  content: '▍';
+  margin-left: 2px;
+  animation: streaming-cursor-blink 1s steps(1) infinite;
+}
+
+@keyframes streaming-cursor-blink {
+  50% {
+    opacity: 0;
+  }
 }

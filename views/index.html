@@ -1,22 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-TW">
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="AI-Powered English Speaking Practice Platform">
+    <meta name="description" content="AI 驅動的英語口說練習平台">
     <meta name="author" content="English Tutor AI">
 
-    <title>English Tutor AI - Speaking Practice Platform</title>
+    <title data-i18n="pageTitle">English Tutor AI - AI 英語口說練習平台</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
   </head>
 
   <body>
-    <!-- Theme Toggle -->
+    <!-- Theme & Language Toggle -->
     <div class="theme-toggle">
-      <button id="theme-btn" aria-label="Toggle theme">
+      <button id="lang-btn" aria-label="切換語言 / Switch Language" title="切換語言 / Switch Language">
+        <i class="fas fa-globe"></i>
+        <span id="lang-btn-label">EN</span>
+      </button>
+      <button id="theme-btn" data-i18n-aria="ariaToggleTheme" aria-label="切換主題">
         <i class="fas fa-moon"></i>
       </button>
     </div>
@@ -26,12 +30,12 @@
       <div class="header-content">
         <div class="logo-section">
           <i class="fas fa-graduation-cap"></i>
-          <h1>English Tutor AI</h1>
+          <h1 data-i18n="appTitle">English Tutor AI</h1>
         </div>
-        <h2>Your Personal English Speaking Coach</h2>
+        <h2 data-i18n="appSubtitle">您的個人 AI 英語口說教練</h2>
         <div class="status-indicator">
           <span id="connection-status" class="status-dot connected"></span>
-          <span id="status-text">Ready to Practice</span>
+          <span id="status-text" data-i18n="statusReady">準備好開始練習</span>
         </div>
       </div>
     </header>
@@ -41,8 +45,8 @@
       <!-- Learning Dashboard -->
       <div class="learning-dashboard" id="learning-dashboard">
         <div class="dashboard-header">
-          <h3><i class="fas fa-chart-line"></i> Your Learning Progress</h3>
-          <button id="toggle-dashboard" class="btn-icon" aria-label="Toggle dashboard">
+          <h3><i class="fas fa-chart-line"></i> <span data-i18n="dashboardTitle">您的學習進度</span></h3>
+          <button id="toggle-dashboard" class="btn-icon" data-i18n-aria="ariaToggleDashboard" aria-label="展開/收合儀表板">
             <i class="fas fa-chevron-up"></i>
           </button>
         </div>
@@ -54,7 +58,7 @@
                 <i class="fas fa-spell-check"></i>
               </div>
               <div class="card-content">
-                <h4>Grammar Score</h4>
+                <h4 data-i18n="cardGrammar">文法分數</h4>
                 <div class="score" id="grammar-score">85%</div>
                 <div class="progress-bar">
                   <div class="progress-fill" style="width: 85%"></div>
@@ -67,7 +71,7 @@
                 <i class="fas fa-microphone-alt"></i>
               </div>
               <div class="card-content">
-                <h4>Pronunciation</h4>
+                <h4 data-i18n="cardPronunciation">發音表現</h4>
                 <div class="score" id="pronunciation-score">78%</div>
                 <div class="progress-bar">
                   <div class="progress-fill" style="width: 78%"></div>
@@ -80,7 +84,7 @@
                 <i class="fas fa-book-open"></i>
               </div>
               <div class="card-content">
-                <h4>Vocabulary</h4>
+                <h4 data-i18n="cardVocabulary">字彙能力</h4>
                 <div class="score" id="vocabulary-score">92%</div>
                 <div class="progress-bar">
                   <div class="progress-fill" style="width: 92%"></div>
@@ -93,7 +97,7 @@
                 <i class="fas fa-comments"></i>
               </div>
               <div class="card-content">
-                <h4>Fluency</h4>
+                <h4 data-i18n="cardFluency">口說流利度</h4>
                 <div class="score" id="fluency-score">81%</div>
                 <div class="progress-bar">
                   <div class="progress-fill" style="width: 81%"></div>
@@ -105,15 +109,15 @@
           <div class="learning-stats">
             <div class="stat-item">
               <i class="fas fa-fire"></i>
-              <span>7 Day Streak</span>
+              <span data-i18n="statStreak">連續練習 7 天</span>
             </div>
             <div class="stat-item">
               <i class="fas fa-clock"></i>
-              <span>45 min Today</span>
+              <span data-i18n="statTodayTime">今日 45 分鐘</span>
             </div>
             <div class="stat-item">
               <i class="fas fa-star"></i>
-              <span>Level: Intermediate</span>
+              <span data-i18n="statLevel">程度：中級</span>
             </div>
           </div>
         </div>
@@ -121,54 +125,54 @@
 
       <!-- Learning Modes -->
       <div class="learning-modes">
-        <h3><i class="fas fa-play-circle"></i> Choose Your Practice Mode</h3>
+        <h3><i class="fas fa-play-circle"></i> <span data-i18n="chooseModeTitle">選擇您的練習模式</span></h3>
         <div class="mode-grid">
           <div class="mode-card active" data-mode="conversation">
             <div class="mode-icon">
               <i class="fas fa-comments"></i>
             </div>
-            <h4>Free Conversation</h4>
-            <p>Natural dialogue practice with AI tutor</p>
+            <h4 data-i18n="modeConversationTitle">自由對話</h4>
+            <p data-i18n="modeConversationDesc">與 AI 導師進行自然流暢的英語對話練習</p>
           </div>
           
           <div class="mode-card" data-mode="grammar">
             <div class="mode-icon">
               <i class="fas fa-spell-check"></i>
             </div>
-            <h4>Grammar Focus</h4>
-            <p>Targeted grammar correction and practice</p>
+            <h4 data-i18n="modeGrammarTitle">文法強化</h4>
+            <p data-i18n="modeGrammarDesc">針對性文法糾正與句型練習</p>
           </div>
           
           <div class="mode-card" data-mode="pronunciation">
             <div class="mode-icon">
               <i class="fas fa-microphone-alt"></i>
             </div>
-            <h4>Pronunciation</h4>
-            <p>Accent training and pronunciation feedback</p>
+            <h4 data-i18n="modePronunciationTitle">發音訓練</h4>
+            <p data-i18n="modePronunciationDesc">口音調整與發音細節回饋</p>
           </div>
           
           <div class="mode-card" data-mode="vocabulary">
             <div class="mode-icon">
               <i class="fas fa-book-open"></i>
             </div>
-            <h4>Vocabulary Builder</h4>
-            <p>Learn new words through conversation</p>
+            <h4 data-i18n="modeVocabularyTitle">字彙擴充</h4>
+            <p data-i18n="modeVocabularyDesc">在對話情境中學習新單字與片語</p>
           </div>
           
           <div class="mode-card" data-mode="fluency">
             <div class="mode-icon">
               <i class="fas fa-rocket"></i>
             </div>
-            <h4>Fluency Training</h4>
-            <p>Build confidence and speaking flow</p>
+            <h4 data-i18n="modeFluencyTitle">流利度訓練</h4>
+            <p data-i18n="modeFluencyDesc">建立開口自信與自然的語流節奏</p>
           </div>
           
           <div class="mode-card" data-mode="scenario">
             <div class="mode-icon">
               <i class="fas fa-briefcase"></i>
             </div>
-            <h4>Scenarios</h4>
-            <p>Practice real-life situations</p>
+            <h4 data-i18n="modeScenarioTitle">情境模擬</h4>
+            <p data-i18n="modeScenarioDesc">練習真實生活與職場情境對話</p>
           </div>
         </div>
       </div>
@@ -176,80 +180,88 @@
       <!-- Settings Panel -->
       <div class="settings-panel" id="settings-panel">
         <div class="settings-header">
-          <h3><i class="fas fa-cog"></i> Learning Settings</h3>
-          <button id="close-settings" aria-label="Close settings">
+          <h3><i class="fas fa-cog"></i> <span data-i18n="settingsTitle">學習設定</span></h3>
+          <button id="close-settings" data-i18n-aria="ariaCloseSettings" aria-label="關閉設定">
             <i class="fas fa-times"></i>
           </button>
         </div>
+
+        <div class="setting-group">
+          <label for="ui-language-select" data-i18n="labelUILanguage">介面語言 (Interface Language)：</label>
+          <select id="ui-language-select">
+            <option value="zh-TW">繁體中文</option>
+            <option value="en">English</option>
+          </select>
+        </div>
         
         <div class="setting-group">
-          <label for="tutor-mode">AI Tutor Mode:</label>
+          <label for="tutor-mode" data-i18n="labelTutorMode">AI 導師模式：</label>
           <select id="tutor-mode">
-            <option value="conversation_partner">Conversation Partner</option>
-            <option value="grammar_tutor">Grammar Tutor</option>
-            <option value="pronunciation_coach">Pronunciation Coach</option>
-            <option value="vocabulary_builder">Vocabulary Builder</option>
-            <option value="fluency_coach">Fluency Coach</option>
+            <option value="conversation_partner" data-i18n="tutorConversationPartner">對話夥伴 (Conversation Partner)</option>
+            <option value="grammar_tutor" data-i18n="tutorGrammarTutor">文法導師 (Grammar Tutor)</option>
+            <option value="pronunciation_coach" data-i18n="tutorPronunciationCoach">發音教練 (Pronunciation Coach)</option>
+            <option value="vocabulary_builder" data-i18n="tutorVocabularyBuilder">字彙專家 (Vocabulary Builder)</option>
+            <option value="fluency_coach" data-i18n="tutorFluencyCoach">流利度教練 (Fluency Coach)</option>
           </select>
         </div>
 
         <div class="setting-group">
-          <label for="difficulty-level">Difficulty Level:</label>
+          <label for="difficulty-level" data-i18n="labelDifficulty">難度等級：</label>
           <select id="difficulty-level">
-            <option value="beginner">Beginner</option>
-            <option value="intermediate">Intermediate</option>
-            <option value="advanced">Advanced</option>
-            <option value="native">Native Level</option>
+            <option value="beginner" data-i18n="diffBeginner">初級 (Beginner)</option>
+            <option value="intermediate" data-i18n="diffIntermediate">中級 (Intermediate)</option>
+            <option value="advanced" data-i18n="diffAdvanced">高級 (Advanced)</option>
+            <option value="native" data-i18n="diffNative">母語程度 (Native Level)</option>
           </select>
         </div>
 
         <div class="setting-group">
-          <label for="feedback-style">Feedback Style:</label>
+          <label for="feedback-style" data-i18n="labelFeedbackStyle">回饋風格：</label>
           <select id="feedback-style">
-            <option value="gentle">Gentle & Encouraging</option>
-            <option value="detailed">Detailed Analysis</option>
-            <option value="immediate">Immediate Correction</option>
-            <option value="summary">End-of-Session Summary</option>
+            <option value="gentle" data-i18n="fbGentle">溫和鼓勵 (Gentle & Encouraging)</option>
+            <option value="detailed" data-i18n="fbDetailed">詳細解析 (Detailed Analysis)</option>
+            <option value="immediate" data-i18n="fbImmediate">即時糾正 (Immediate Correction)</option>
+            <option value="summary" data-i18n="fbSummary">課後總結 (End-of-Session Summary)</option>
           </select>
         </div>
 
         <div class="setting-group">
-          <label for="language-select">Recognition Language:</label>
+          <label for="language-select" data-i18n="labelRecogLanguage">語音辨識語言：</label>
           <select id="language-select">
-            <option value="en-US">English (US)</option>
-            <option value="en-GB">English (UK)</option>
-            <option value="en-AU">English (Australia)</option>
-            <option value="en-CA">English (Canada)</option>
+            <option value="en-US" data-i18n="langEnUS">英文 - 美國 (en-US)</option>
+            <option value="en-GB" data-i18n="langEnGB">英文 - 英國 (en-GB)</option>
+            <option value="en-AU" data-i18n="langEnAU">英文 - 澳洲 (en-AU)</option>
+            <option value="en-CA" data-i18n="langEnCA">英文 - 加拿大 (en-CA)</option>
           </select>
         </div>
 
         <div class="setting-group">
-          <label for="voice-select">Tutor Voice:</label>
+          <label for="voice-select" data-i18n="labelTutorVoice">導師語音：</label>
           <select id="voice-select">
-            <option value="">Default</option>
+            <option value="" data-i18n="voiceDefault">預設語音</option>
           </select>
         </div>
 
         <div class="setting-group">
-          <label for="session-length">Session Length:</label>
+          <label for="session-length" data-i18n="labelSessionLength">練習時長：</label>
           <select id="session-length">
-            <option value="5">5 minutes</option>
-            <option value="10">10 minutes</option>
-            <option value="15">15 minutes</option>
-            <option value="30">30 minutes</option>
-            <option value="unlimited">Unlimited</option>
+            <option value="5" data-i18n="session5m">5 分鐘</option>
+            <option value="10" data-i18n="session10m">10 分鐘</option>
+            <option value="15" data-i18n="session15m">15 分鐘</option>
+            <option value="30" data-i18n="session30m">30 分鐘</option>
+            <option value="unlimited" data-i18n="sessionUnlimited">不限時間</option>
           </select>
         </div>
 
         <div class="setting-group">
           <button id="clear-progress" class="btn-secondary">
-            <i class="fas fa-chart-line"></i> View Detailed Progress
+            <i class="fas fa-chart-line"></i> <span data-i18n="btnViewProgress">檢視詳細進度</span>
           </button>
         </div>
 
         <div class="setting-group">
           <button id="clear-history" class="btn-secondary">
-            <i class="fas fa-trash"></i> Clear Session History
+            <i class="fas fa-trash"></i> <span data-i18n="btnClearHistory">清除對話紀錄</span>
           </button>
         </div>
       </div>
@@ -259,23 +271,23 @@
         <!-- Feedback Panel -->
         <div class="feedback-panel" id="feedback-panel">
           <div class="feedback-header">
-            <h4><i class="fas fa-lightbulb"></i> AI Feedback</h4>
-            <button id="toggle-feedback" class="btn-icon">
+            <h4><i class="fas fa-lightbulb"></i> <span data-i18n="feedbackPanelTitle">AI 學習回饋</span></h4>
+            <button id="toggle-feedback" class="btn-icon" data-i18n-aria="ariaToggleFeedback" aria-label="切換回饋面板">
               <i class="fas fa-chevron-down"></i>
             </button>
           </div>
-          <div class="feedback-content">
+          <div class="feedback-content" id="feedback-content">
             <div class="feedback-item grammar-feedback">
-              <h5><i class="fas fa-spell-check"></i> Grammar</h5>
-              <div id="grammar-feedback">Speak to get grammar feedback...</div>
+              <h5><i class="fas fa-spell-check"></i> <span data-i18n="fbHeaderGrammar">文法</span></h5>
+              <div id="grammar-feedback" data-i18n="fbPlaceholderGrammar">開始口說即可獲得文法回饋...</div>
             </div>
             <div class="feedback-item pronunciation-feedback">
-              <h5><i class="fas fa-microphone-alt"></i> Pronunciation</h5>
-              <div id="pronunciation-feedback">Speak to get pronunciation feedback...</div>
+              <h5><i class="fas fa-microphone-alt"></i> <span data-i18n="fbHeaderPronunciation">發音</span></h5>
+              <div id="pronunciation-feedback" data-i18n="fbPlaceholderPronunciation">開始口說即可獲得發音回饋...</div>
             </div>
             <div class="feedback-item vocabulary-feedback">
-              <h5><i class="fas fa-book-open"></i> Vocabulary</h5>
-              <div id="vocabulary-feedback">New words will appear here...</div>
+              <h5><i class="fas fa-book-open"></i> <span data-i18n="fbHeaderVocabulary">字彙</span></h5>
+              <div id="vocabulary-feedback" data-i18n="fbPlaceholderVocabulary">新單字與片語將會顯示於此...</div>
             </div>
           </div>
         </div>
@@ -288,8 +300,8 @@
                 <i class="fas fa-graduation-cap"></i>
               </div>
               <div class="message-content">
-                <p>Hello! I'm your AI English tutor. I'm here to help you improve your speaking skills through natural conversation. Click the microphone and start speaking - I'll provide helpful feedback to make you a more confident English speaker!</p>
-                <p><small><em>💡 Note: Currently running in demo mode. For full AI capabilities, configure an OpenAI API key in the server settings.</em></small></p>
+                <p data-i18n="welcomeMessageMain">您好！我是您的 AI 英語導師，將透過自然對話協助您提升英語口說能力。請點擊下方麥克風開始說英文，我會提供實用的回饋，幫助您更自信地開口說英語！</p>
+                <p><small><em data-i18n="welcomeMessageNote">💡 提示：若要使用完整 AI 功能，請確認本機 Ollama 伺服器已啟動並已下載模型。</em></small></p>
               </div>
               <div class="message-time" data-time=""></div>
             </div>
@@ -299,35 +311,35 @@
         <!-- Current Conversation Display -->
         <div class="current-conversation">
           <div class="conversation-item user-input">
-            <span class="label"><i class="fas fa-user"></i> You said:</span>
-            <em class="output-you">Click the microphone to start practicing...</em>
+            <span class="label"><i class="fas fa-user"></i> <span data-i18n="labelYouSaid">您說：</span></span>
+            <em class="output-you" data-i18n="placeholderYouSaid">點擊麥克風開始練習...</em>
           </div>
           <div class="conversation-item tutor-response">
-            <span class="label"><i class="fas fa-graduation-cap"></i> AI Tutor:</span>
-            <em class="output-bot">Ready to help you improve your English!</em>
+            <span class="label"><i class="fas fa-graduation-cap"></i> <span data-i18n="labelAITutor">AI 導師：</span></span>
+            <em class="output-bot" data-i18n="placeholderAITutor">隨時準備協助您提升英語能力！</em>
           </div>
         </div>
 
         <!-- Voice Controls -->
         <div class="voice-controls">
           <!-- Main Microphone Button -->
-          <button id="mic-btn" class="mic-button" aria-label="Start speaking practice">
+          <button id="mic-btn" class="mic-button" data-i18n-aria="ariaStartSpeaking" aria-label="開始口說練習">
             <i class="fas fa-microphone"></i>
             <div class="pulse-ring"></div>
           </button>
 
           <!-- Secondary Controls -->
           <div class="control-buttons">
-            <button id="settings-btn" class="control-btn" aria-label="Open settings">
+            <button id="settings-btn" class="control-btn" data-i18n-aria="ariaOpenSettings" aria-label="開啟設定">
               <i class="fas fa-cog"></i>
             </button>
-            <button id="mute-btn" class="control-btn" aria-label="Toggle mute">
+            <button id="mute-btn" class="control-btn" data-i18n-aria="ariaToggleMute" aria-label="切換靜音">
               <i class="fas fa-volume-up"></i>
             </button>
-            <button id="stop-btn" class="control-btn" aria-label="Stop current speech">
+            <button id="stop-btn" class="control-btn" data-i18n-aria="ariaStopSpeech" aria-label="停止播放語音">
               <i class="fas fa-stop"></i>
             </button>
-            <button id="feedback-btn" class="control-btn" aria-label="Toggle feedback panel">
+            <button id="feedback-btn" class="control-btn" data-i18n-aria="ariaToggleFeedback" aria-label="切換回饋面板">
               <i class="fas fa-lightbulb"></i>
             </button>
           </div>
@@ -346,7 +358,7 @@
             <span></span>
             <span></span>
           </div>
-          <p>AI is analyzing your speech...</p>
+          <p data-i18n="loadingAnalyzing">AI 正在分析您的語音...</p>
         </div>
 
         <!-- Voice Visualization -->
@@ -360,8 +372,8 @@
     <div class="modal" id="scenario-modal" style="display: none;">
       <div class="modal-content">
         <div class="modal-header">
-          <h3><i class="fas fa-briefcase"></i> Choose Practice Scenario</h3>
-          <button class="modal-close" onclick="closeScenarioModal()">
+          <h3><i class="fas fa-briefcase"></i> <span data-i18n="scenarioModalTitle">選擇練習情境</span></h3>
+          <button class="modal-close" onclick="closeScenarioModal()" data-i18n-aria="ariaCloseModal" aria-label="關閉視窗">
             <i class="fas fa-times"></i>
           </button>
         </div>
@@ -369,33 +381,33 @@
           <div class="scenario-grid">
             <div class="scenario-card" data-scenario="job-interview">
               <i class="fas fa-briefcase"></i>
-              <h4>Job Interview</h4>
-              <p>Practice professional interview skills</p>
+              <h4 data-i18n="scenarioJobTitle">工作面試</h4>
+              <p data-i18n="scenarioJobDesc">練習專業職場求職面試技巧</p>
             </div>
             <div class="scenario-card" data-scenario="restaurant">
               <i class="fas fa-utensils"></i>
-              <h4>Restaurant</h4>
-              <p>Ordering food and dining conversations</p>
+              <h4 data-i18n="scenarioRestaurantTitle">餐廳點餐</h4>
+              <p data-i18n="scenarioRestaurantDesc">練習點餐與用餐情境對話</p>
             </div>
             <div class="scenario-card" data-scenario="travel">
               <i class="fas fa-plane"></i>
-              <h4>Travel</h4>
-              <p>Airport, hotel, and tourist interactions</p>
+              <h4 data-i18n="scenarioTravelTitle">旅遊出行</h4>
+              <p data-i18n="scenarioTravelDesc">機場、飯店與觀光詢問互動</p>
             </div>
             <div class="scenario-card" data-scenario="shopping">
               <i class="fas fa-shopping-cart"></i>
-              <h4>Shopping</h4>
-              <p>Store interactions and purchases</p>
+              <h4 data-i18n="scenarioShoppingTitle">購物消費</h4>
+              <p data-i18n="scenarioShoppingDesc">商店詢問商品、價格與結帳</p>
             </div>
             <div class="scenario-card" data-scenario="medical">
               <i class="fas fa-stethoscope"></i>
-              <h4>Medical</h4>
-              <p>Doctor visits and health discussions</p>
+              <h4 data-i18n="scenarioMedicalTitle">醫療就診</h4>
+              <p data-i18n="scenarioMedicalDesc">看診描述症狀與健康諮詢</p>
             </div>
             <div class="scenario-card" data-scenario="social">
               <i class="fas fa-users"></i>
-              <h4>Social</h4>
-              <p>Casual conversations and small talk</p>
+              <h4 data-i18n="scenarioSocialTitle">社交閒聊</h4>
+              <p data-i18n="scenarioSocialDesc">日常輕鬆交談與破冰話題</p>
             </div>
           </div>
         </div>
@@ -408,7 +420,7 @@
         <i class="fas fa-info-circle"></i>
         <span id="toast-message"></span>
       </div>
-      <button class="toast-close" onclick="hideToast()">
+      <button class="toast-close" onclick="hideToast()" data-i18n-aria="ariaCloseToast" aria-label="關閉通知">
         <i class="fas fa-times"></i>
       </button>
     </div>
